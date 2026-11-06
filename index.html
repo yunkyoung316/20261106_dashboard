@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D1c FAB Qual 진행현황 대시보드</title>
+<style>
+:root{
+  --bg:#f4f6fa;--card:#fff;--ink:#1b2333;--sub:#5d6678;--line:#e1e5ec;--navy:#1f3864;
+  --ok:#2e9e5b;--done:#3b78c4;--warn:#e0a100;--bad:#d6453d;--okbg:#e3f4ea;--donebg:#e3edf9;--warnbg:#fff4d1;--badbg:#fbe2e0;
+}
+@media (prefers-color-scheme:dark){:root{--bg:#12161d;--card:#1b212b;--ink:#e8ecf3;--sub:#9aa5b8;--line:#2c3441;--navy:#8fb0e8;
+  --okbg:#1c3a2a;--donebg:#1d3250;--warnbg:#3d3410;--badbg:#44201e}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Malgun Gothic","Apple SD Gothic Neo",Arial,sans-serif;font-size:14px;line-height:1.5}
+.wrap{max-width:1200px;margin:0 auto;padding:20px 16px 48px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:flex-end;margin-bottom:16px}
+h1{margin:0;font-size:22px;color:var(--navy)}
+.meta{color:var(--sub);font-size:13px}
+h2{font-size:16px;margin:28px 0 10px;color:var(--navy)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.summary{border-left:4px solid var(--navy)}
+.summary ol{margin:0;padding-left:20px}.summary li{margin:4px 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:14px}
+.kpi .l{font-size:12px;color:var(--sub)}.kpi .v{font-size:28px;font-weight:700;margin:2px 0}
+.kpi .s{font-size:12px;color:var(--sub)}
+.bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px}.bar i{display:block;height:100%;background:var(--navy)}
+.grid2{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+.pill{display:inline-block;padding:1px 9px;border-radius:10px;font-size:12px;font-weight:700;white-space:nowrap}
+.p-정상{background:var(--okbg);color:var(--ok)}.p-완료{background:var(--donebg);color:var(--done)}
+.p-주의{background:var(--warnbg);color:#a87800}.p-지연{background:var(--badbg);color:var(--bad)}
+@media(prefers-color-scheme:dark){.p-주의{color:#f0c34a}}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--sub);margin-bottom:8px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.hrow{display:grid;grid-template-columns:170px 1fr 60px;gap:8px;align-items:center;margin:5px 0}
+.hrow .n{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{position:relative;height:16px;background:var(--line);border-radius:3px}
+.track .f{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.track .p{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.hrow .pc{font-size:12px;text-align:right;font-weight:700}
+.heat{width:100%;border-collapse:separate;border-spacing:3px;font-size:12px}
+.heat th{font-weight:600;color:var(--sub);text-align:center;font-size:11px}
+.heat td.c{text-align:center;border-radius:3px;height:24px;color:#fff;font-weight:700}
+.heat td.n{white-space:nowrap}
+.donut{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center}
+.donut ul{list-style:none;margin:0;padding:0}.donut li{margin:4px 0}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+select,input[type=search]{padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit}
+.tw{overflow-x:auto}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+.t th{background:var(--navy);color:#fff;padding:7px 8px;text-align:center;cursor:pointer;white-space:nowrap;position:sticky;top:0}
+@media(prefers-color-scheme:dark){.t th{color:#12161d}}
+.t td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.t td.c{text-align:center}.t tr:hover td{background:rgba(120,140,180,.08)}
+.mini{display:inline-block;width:70px;height:7px;background:var(--line);border-radius:3px;overflow:hidden;vertical-align:middle;margin-right:6px}
+.mini i{display:block;height:100%}
+.act li{margin:8px 0;list-style:none}.act ul{padding:0;margin:0}
+.act label{cursor:pointer}.act .d{color:var(--sub);font-size:12px;display:block;margin-left:24px}
+.note{color:var(--sub);font-size:12px;margin-top:20px}
+.tag{font-size:11px;color:var(--sub)}
+#chatFab{position:fixed;right:20px;bottom:20px;z-index:50;background:var(--navy);color:#fff;border:0;border-radius:28px;padding:12px 18px;font:inherit;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+@media(prefers-color-scheme:dark){#chatFab{color:#12161d}}
+#chat{position:fixed;right:20px;bottom:76px;z-index:50;width:400px;max-width:calc(100vw - 32px);height:600px;max-height:calc(100vh - 100px);background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.28);display:none;flex-direction:column;overflow:hidden}
+#chat.on{display:flex}
+@media(min-width:1100px){
+  body{padding-right:400px}
+  #chat{display:flex;right:0;top:0;bottom:auto;height:100vh;max-height:none;width:400px;max-width:none;border-radius:0;border-width:0 0 0 1px;box-shadow:none}
+  #chatFab,#cclose{display:none}
+}
+.ch{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--navy);color:#fff;font-weight:700}
+@media(prefers-color-scheme:dark){.ch{color:#12161d}}
+.ch button{background:transparent;border:1px solid currentColor;color:inherit;border-radius:6px;padding:2px 8px;cursor:pointer;font:inherit;font-size:12px;margin-left:6px}
+#cset{padding:10px 12px;border-bottom:1px solid var(--line);display:none;font-size:12px}
+#cset.on{display:block}
+#cset label{display:block;margin:6px 0 2px;color:var(--sub)}
+#cset input,#cset select{width:100%;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit}
+#cset .row{display:flex;align-items:center;gap:6px;margin-top:8px}#cset .row input{width:auto}
+#cset .btn,#csend{background:var(--navy);color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer;font:inherit}
+@media(prefers-color-scheme:dark){#cset .btn,#csend{color:#12161d}}
+#cstat{font-size:12px;margin-top:6px}
+#cmsgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.m{max-width:88%;padding:8px 11px;border-radius:10px;white-space:pre-wrap;word-break:break-word;font-size:13px}
+.m.u{align-self:flex-end;background:var(--navy);color:#fff}
+@media(prefers-color-scheme:dark){.m.u{color:#12161d}}
+.m.a{align-self:flex-start;background:var(--bg);border:1px solid var(--line)}
+.m.e{align-self:flex-start;background:var(--badbg);color:var(--bad)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 6px}
+.chips button{background:var(--bg);border:1px solid var(--line);color:var(--ink);border-radius:14px;padding:3px 10px;font:inherit;font-size:12px;cursor:pointer}
+.cin{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--line)}
+.cin textarea{flex:1;resize:none;height:40px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>BEOL D1c FAB Qual 진행현황 대시보드</h1>
+  <div class="meta">작성자 Metal 이윤경 · 대상 제품 D1c (BEOL Metal Part) · <span id="refd"></span></div></div>
+  <div class="meta" id="ddayTop"></div>
+</header>
+
+<section class="card summary" aria-label="요약">
+  <strong>요약</strong>
+  <ol id="sum"></ol>
+</section>
+
+<div class="kpis" id="kpis"></div>
+
+<h2>항목별 진행율 vs 계획 <span class="tag">(막대=실제, 검은 선=기준일 계획 진행율)</span></h2>
+<div class="grid2">
+  <div class="card">
+    <div class="legend"><span style="--c:var(--ok)">정상</span><span style="--c:var(--warn)">주의</span><span style="--c:var(--bad)">지연</span><span style="--c:var(--done)">완료</span></div>
+    <div id="bars"></div>
+  </div>
+  <div class="card">
+    <strong>Risk 등급 분포</strong>
+    <div class="donut" id="donut"></div>
+    <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
+    <strong>단계별 평균 진행율</strong>
+    <div id="stageAvg" style="margin-top:8px"></div>
+  </div>
+</div>
+
+<h2>항목 × 단계 진행 히트맵</h2>
+<div class="card tw"><table class="heat" id="heat"></table></div>
+
+<h2>상세 현황</h2>
+<div class="card">
+  <div class="toolbar">
+    <select id="fg"><option value="">등급 전체</option><option>A</option><option>B</option></select>
+    <select id="fr"><option value="">Risk 전체</option><option>지연</option><option>주의</option><option>정상</option><option>완료</option></select>
+    <input type="search" id="fq" placeholder="항목/담당자 검색">
+  </div>
+  <div class="tw"><table class="t" id="tbl"></table></div>
+</div>
+
+<h2>이슈 로그</h2>
+<div class="card tw"><table class="t" id="iss"></table></div>
+
+<h2>권고 조치 · 확인란</h2>
+<div class="card act"><ul id="acts"></ul></div>
+
+<p class="note">※ 본 대시보드는 더미데이터 기반입니다. 정량 수치(진행율·갭·지연일·Risk)는 규칙으로 산출하며, 계획 진행율은 시작일~목표일 선형 가정입니다.
+Risk 기준: 계획 대비 갭 &gt; <span id="w1"></span> 주의, &gt; <span id="w2"></span> 지연. 우선 조치 항목의 최종 선정·승인은 담당자/PM이 합니다.</p>
+</div>
+
+<button id="chatFab" type="button">💬 Qual 챗봇</button>
+<aside id="chat" aria-label="Qual 챗봇">
+  <div class="ch"><span>Qual 현황 챗봇</span><span><button type="button" id="cgear">설정</button><button type="button" id="cclear">초기화</button><button type="button" id="cclose">✕</button></span></div>
+  <div id="cset" class="on">
+    <label for="sfmt">API 형식</label>
+    <select id="sfmt"><option value="openai">OpenAI 호환 (/chat/completions)</option><option value="anthropic">Anthropic (/v1/messages)</option></select>
+    <label for="sbase">Base URL</label>
+    <input id="sbase" type="text" placeholder="https://api.openai.com/v1" autocomplete="off">
+    <label for="skey">API Key</label>
+    <input id="skey" type="password" placeholder="sk-..." autocomplete="off">
+    <label for="smodel">Model name</label>
+    <input id="smodel" type="text" placeholder="모델명 입력" autocomplete="off">
+    <div class="row"><input type="checkbox" id="sremember"><label for="sremember" style="margin:0">API Key도 이 브라우저에 저장 (공용 PC 비권장)</label></div>
+    <div class="row"><button type="button" class="btn" id="ssave">저장 후 닫기</button></div>
+    <div id="cstat"></div>
+  </div>
+  <div id="cmsgs"></div>
+  <div class="chips" id="chips"></div>
+  <div class="cin"><textarea id="cin" placeholder="예: 지연 항목과 원인을 알려줘 (Enter 전송, Shift+Enter 줄바꿈)"></textarea><button type="button" id="csend">전송</button></div>
+</aside>
+
+<script>
+const D = {"ref": "2026-11-06", "due": "2026-11-30", "dday": 24, "warn": 0.05, "delay": 0.15, "stages": ["1.Split 설계/Lot 투입", "2.Wafer 공정(Metal)", "3.전기특성/계측", "4.신뢰성 평가", "5.결과 리뷰/승인"], "items": [{"id": "Q-01", "name": "Via Resistance (Rc) 분포", "grade": "A", "owner": "이윤경", "start": "2026-09-14", "due": "2026-11-30", "stages": [1, 1, 1, 1, 1], "act": 1.0, "plan": 0.6883116883116883, "gap": -0.3116883116883117, "cur": "완료", "status": "완료", "risk": "완료", "delay": 0, "updated": "2026-11-06", "issue": "-"}, {"id": "Q-02", "name": "Metal Line Rs 균일도", "grade": "A", "owner": "김민준", "start": "2026-09-14", "due": "2026-11-30", "stages": [1, 1, 1, 1, 1], "act": 1.0, "plan": 0.6883116883116883, "gap": -0.3116883116883117, "cur": "완료", "status": "완료", "risk": "완료", "delay": 0, "updated": "2026-11-06", "issue": "-"}, {"id": "Q-03", "name": "Electromigration (EM) 신뢰성", "grade": "A", "owner": "박서연", "start": "2026-09-21", "due": "2026-11-30", "stages": [1, 1, 1, 0.35, 0], "act": 0.67, "plan": 0.6571428571428571, "gap": -0.0128571428571429, "cur": "4.신뢰성 평가", "status": "진행중", "risk": "정상", "delay": 0, "updated": "2026-11-04", "issue": "EM 시험 장비 대기로 Stress 시작 5일 지연"}, {"id": "Q-04", "name": "Stress Migration (SM) 신뢰성", "grade": "A", "owner": "박서연", "start": "2026-09-21", "due": "2026-11-30", "stages": [1, 1, 1, 0.6, 0], "act": 0.72, "plan": 0.6571428571428571, "gap": -0.06285714285714283, "cur": "4.신뢰성 평가", "status": "진행중", "risk": "정상", "delay": 0, "updated": "2026-11-06", "issue": "-"}, {"id": "Q-05", "name": "TDDB (Inter-metal 유전체)", "grade": "A", "owner": "최도윤", "start": "2026-09-21", "due": "2026-11-30", "stages": [1, 1, 0.9, 0, 0], "act": 0.58, "plan": 0.6571428571428571, "gap": 0.07714285714285718, "cur": "3.전기특성/계측", "status": "진행중", "risk": "주의", "delay": 5, "updated": "2026-11-03", "issue": "Low-k 계면 TDDB 수명 Spec 근접 - 재측정 필요"}, {"id": "Q-06", "name": "CMP Dishing/Erosion", "grade": "A", "owner": "정하은", "start": "2026-09-14", "due": "2026-11-30", "stages": [1, 1, 1, 1, 1], "act": 1.0, "plan": 0.6883116883116883, "gap": -0.3116883116883117, "cur": "완료", "status": "완료", "risk": "완료", "delay": 0, "updated": "2026-11-06", "issue": "-"}, {"id": "Q-07", "name": "Overlay (Via-Metal)", "grade": "A", "owner": "강지호", "start": "2026-09-28", "due": "2026-11-30", "stages": [1, 1, 1, 1, 1], "act": 1.0, "plan": 0.6190476190476191, "gap": -0.38095238095238093, "cur": "완료", "status": "완료", "risk": "완료", "delay": 0, "updated": "2026-11-06", "issue": "-"}, {"id": "Q-08", "name": "Cu Gap-fill / Void 검사", "grade": "A", "owner": "윤서아", "start": "2026-09-28", "due": "2026-11-30", "stages": [1, 1, 0.7, 0, 0], "act": 0.54, "plan": 0.6190476190476191, "gap": 0.07904761904761903, "cur": "3.전기특성/계측", "status": "진행중", "risk": "주의", "delay": 5, "updated": "2026-11-05", "issue": "Void 의심 Lot Hold, 단면 TEM 분석 대기"}, {"id": "Q-09", "name": "Barrier/Seed Step Coverage", "grade": "A", "owner": "한지우", "start": "2026-10-05", "due": "2026-11-30", "stages": [1, 1, 1, 1, 1], "act": 1.0, "plan": 0.5714285714285714, "gap": -0.4285714285714286, "cur": "완료", "status": "완료", "risk": "완료", "delay": 0, "updated": "2026-11-06", "issue": "-"}, {"id": "Q-10", "name": "RC Delay (Ring Oscillator)", "grade": "A", "owner": "오현우", "start": "2026-10-05", "due": "2026-11-30", "stages": [1, 1, 1, 1, 1], "act": 1.0, "plan": 0.5714285714285714, "gap": -0.4285714285714286, "cur": "완료", "status": "완료", "risk": "완료", "delay": 0, "updated": "2026-11-06", "issue": "-"}, {"id": "Q-11", "name": "Metal CD/Profile 관리", "grade": "B", "owner": "송예린", "start": "2026-10-05", "due": "2026-11-27", "stages": [1, 1, 1, 1, 1], "act": 1.0, "plan": 0.6037735849056604, "gap": -0.39622641509433965, "cur": "완료", "status": "완료", "risk": "완료", "delay": 0, "updated": "2026-11-06", "issue": "-"}, {"id": "Q-12", "name": "Particle/Defect Density", "grade": "B", "owner": "임태오", "start": "2026-10-12", "due": "2026-11-27", "stages": [1, 1, 1, 1, 1], "act": 1.0, "plan": 0.5434782608695652, "gap": -0.4565217391304348, "cur": "완료", "status": "완료", "risk": "완료", "delay": 0, "updated": "2026-11-06", "issue": "-"}, {"id": "Q-13", "name": "Wafer Warpage/Stress", "grade": "B", "owner": "장수빈", "start": "2026-10-12", "due": "2026-11-27", "stages": [1, 1, 1, 1, 1], "act": 1.0, "plan": 0.5434782608695652, "gap": -0.4565217391304348, "cur": "완료", "status": "완료", "risk": "완료", "delay": 0, "updated": "2026-11-06", "issue": "-"}, {"id": "Q-14", "name": "Metal 식각 Loading Effect", "grade": "B", "owner": "배건우", "start": "2026-10-19", "due": "2026-11-27", "stages": [1, 1, 0.55, 0, 0], "act": 0.51, "plan": 0.46153846153846156, "gap": -0.048461538461538445, "cur": "3.전기특성/계측", "status": "진행중", "risk": "정상", "delay": 0, "updated": "2026-11-02", "issue": "계측 Recipe 재설정으로 측정 일정 3일 순연"}, {"id": "Q-15", "name": "Pad/Top Metal 접합 신뢰성", "grade": "B", "owner": "신유나", "start": "2026-10-19", "due": "2026-11-27", "stages": [1, 0.3, 0, 0, 0], "act": 0.26, "plan": 0.46153846153846156, "gap": 0.20153846153846156, "cur": "2.Wafer 공정(Metal)", "status": "진행중", "risk": "지연", "delay": 8, "updated": "2026-11-02", "issue": "Top Metal 타깃 입고 지연으로 공정 착수 지연"}], "issues": [{"id": "ISS-001", "item": "Q-02", "name": "Metal Line Rs 균일도", "date": "2026-10-22", "cat": "공정 변동", "text": "Metal Rs 경계 Lot 1건 재측정", "sev": "하", "owner": "김민준", "action": "재측정 완료", "due": "2026-10-26", "status": "조치완료", "hold": 0}, {"id": "ISS-002", "item": "Q-06", "name": "CMP Dishing/Erosion", "date": "2026-10-27", "cat": "공정 변동", "text": "CMP Pad 교체 후 Dishing 일시 증가", "sev": "중", "owner": "정하은", "action": "Pad 교체/조건 재설정", "due": "2026-10-30", "status": "조치완료", "hold": 0}, {"id": "ISS-003", "item": "Q-12", "name": "Particle/Defect Density", "date": "2026-10-30", "cat": "측정 지연", "text": "Defect 검사 장비 PM으로 측정 1일 순연", "sev": "하", "owner": "임태오", "action": "일정 재조정", "due": "2026-11-02", "status": "조치완료", "hold": 0}, {"id": "ISS-004", "item": "Q-05", "name": "TDDB (Inter-metal 유전체)", "date": "2026-11-02", "cat": "Spec 이탈", "text": "Low-k 계면 TDDB 수명 Spec 근접 - 재측정 필요", "sev": "상", "owner": "최도윤", "action": "재측정 및 Low-k 공정팀 협의", "due": "2026-11-12", "status": "진행중", "hold": 0}, {"id": "ISS-005", "item": "Q-15", "name": "Pad/Top Metal 접합 신뢰성", "date": "2026-11-02", "cat": "자재", "text": "Top Metal 타깃 입고 지연으로 공정 착수 지연", "sev": "상", "owner": "신유나", "action": "타깃 긴급 입고 요청 (자재팀)", "due": "2026-11-13", "status": "진행중", "hold": 0}, {"id": "ISS-006", "item": "Q-08", "name": "Cu Gap-fill / Void 검사", "date": "2026-11-03", "cat": "Hold", "text": "Void 의심 Lot Hold, 단면 TEM 분석 대기", "sev": "상", "owner": "윤서아", "action": "TEM 분석 우선 처리 요청", "due": "2026-11-11", "status": "진행중", "hold": 3}, {"id": "ISS-007", "item": "Q-03", "name": "Electromigration (EM) 신뢰성", "date": "2026-11-04", "cat": "신뢰성", "text": "EM 시험 장비 대기로 Stress 시작 5일 지연", "sev": "중", "owner": "박서연", "action": "Stress 장비 우선 배정 요청", "due": "2026-11-10", "status": "진행중", "hold": 0}, {"id": "ISS-008", "item": "Q-14", "name": "Metal 식각 Loading Effect", "date": "2026-11-04", "cat": "측정 지연", "text": "계측 Recipe 재설정으로 측정 일정 3일 순연", "sev": "중", "owner": "배건우", "action": "계측 Recipe 재설정/검증", "due": "2026-11-09", "status": "진행중", "hold": 0}]};
+const $ = s => document.querySelector(s);
+const pct = v => Math.round(v*100)+"%";
+const RC = {정상:"var(--ok)",주의:"var(--warn)",지연:"var(--bad)",완료:"var(--done)"};
+const esc = s => String(s??"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const pill = r => `<span class="pill p-${r}">${r}</span>`;
+const I = D.items;
+
+$("#refd").textContent = "기준일 "+D.ref+" · 목표 납기 "+D.due;
+$("#ddayTop").innerHTML = "<strong>납기 D-"+D.dday+"</strong>";
+$("#w1").textContent = pct(D.warn)+"p"; $("#w2").textContent = pct(D.delay)+"p";
+
+// ---- 집계 (규칙 기반)
+const avg = a => a.reduce((x,y)=>x+y,0)/(a.length||1);
+const done = I.filter(i=>i.risk==="완료");
+const dA = done.filter(i=>i.grade==="A").length, nA = I.filter(i=>i.grade==="A").length;
+const dB = done.filter(i=>i.grade==="B").length, nB = I.filter(i=>i.grade==="B").length;
+const cnt = r => I.filter(i=>i.risk===r).length;
+const avgAct = avg(I.map(i=>i.act)), avgPlan = avg(I.map(i=>i.plan));
+const risky = I.filter(i=>i.risk==="지연"||i.risk==="주의").sort((a,b)=>b.gap-a.gap);
+
+// ---- 요약 3줄
+const worst = risky[0];
+$("#sum").innerHTML = [
+ `전체 ${I.length}개 항목 중 <b>${done.length}개 완료(${pct(done.length/I.length)})</b>, 평균 진행율 <b>${pct(avgAct)}</b> (계획 ${pct(avgPlan)}). A등급 ${dA}/${nA}, B등급 ${dB}/${nB} 완료.`,
+ `Risk: <b>지연 ${cnt("지연")}건 · 주의 ${cnt("주의")}건</b>` + (worst? ` — 가장 미진한 항목은 <b>${esc(worst.id)} ${esc(worst.name)}</b> (계획 대비 -${pct(worst.gap)}p, 추정 지연 ${worst.delay}일).`:"."),
+ `목표 납기(${D.due})까지 <b>${D.dday}일</b> 남음. 미완료 ${I.length-done.length}건 중 신뢰성 평가·승인 단계 잔여 항목이 많아 <b>납기 내 완료 가능 여부는 지연·주의 항목의 이슈 해소 속도에 달려 있음(확인 필요)</b>.`
+].map(t=>`<li>${t}</li>`).join("");
+
+// ---- KPI 카드
+const K = [
+ ["전체 평균 진행율", pct(avgAct), `계획 ${pct(avgPlan)}`, avgAct],
+ ["A등급 달성율", pct(dA/nA), `${dA} / ${nA} 완료 · 목표 100%`, dA/nA],
+ ["B등급 달성율", pct(dB/nB), `${dB} / ${nB} 완료 · 목표 100%`, dB/nB],
+ ["전체 목표 달성율", pct(done.length/I.length), `${done.length} / ${I.length} 완료 · 목표 100%`, done.length/I.length],
+ ["지연 / 주의 항목", `<span style="color:var(--bad)">${cnt("지연")}</span> / <span style="color:#c99200">${cnt("주의")}</span>`, `진행중 이슈 ${D.issues.filter(x=>x.status!=="조치완료").length}건`, null],
+ ["납기까지", "D-"+D.dday, D.due, null]
+];
+$("#kpis").innerHTML = K.map(k=>`<div class="card kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="s">${k[2]}</div>${k[3]!=null?`<div class="bar"><i style="width:${k[3]*100}%"></i></div>`:""}</div>`).join("");
+
+// ---- 막대 차트
+const order = [...I].sort((a,b)=>({지연:0,주의:1,정상:2,완료:3}[a.risk]-{지연:0,주의:1,정상:2,완료:3}[b.risk]) || b.gap-a.gap);
+$("#bars").innerHTML = order.map(i=>`<div class="hrow" title="${esc(i.name)} · 실제 ${pct(i.act)} / 계획 ${pct(i.plan)}">
+ <div class="n">${i.id} ${esc(i.name)} <span class="tag">[${i.grade}]</span></div>
+ <div class="track"><div class="f" style="width:${i.act*100}%;background:${RC[i.risk]}"></div><div class="p" style="left:${i.plan*100}%"></div></div>
+ <div class="pc">${pct(i.act)}</div></div>`).join("");
+
+// ---- 도넛 (SVG)
+(function(){
+  const R=["완료","정상","주의","지연"], tot=I.length, r=42, c=2*Math.PI*r; let off=0, segs="";
+  R.forEach(k=>{const n=cnt(k); if(!n) return; const len=c*n/tot;
+    segs+=`<circle r="${r}" cx="60" cy="60" fill="none" stroke="${RC[k]}" stroke-width="18" stroke-dasharray="${len} ${c-len}" stroke-dashoffset="${-off}" transform="rotate(-90 60 60)"/>`; off+=len;});
+  $("#donut").innerHTML = `<svg width="130" height="130" viewBox="0 0 120 120" role="img" aria-label="Risk 등급 분포">${segs}<text x="60" y="58" text-anchor="middle" font-size="20" font-weight="700" fill="currentColor">${tot}</text><text x="60" y="74" text-anchor="middle" font-size="9" fill="currentColor">항목</text></svg>
+  <ul>${R.map(k=>`<li>${pill(k)} ${cnt(k)}건</li>`).join("")}</ul>`;
+  $("#stageAvg").innerHTML = D.stages.map((s,j)=>{const a=avg(I.map(i=>i.stages[j]));
+    return `<div style="font-size:12px;margin:5px 0">${esc(s)} <b style="float:right">${pct(a)}</b><div class="bar"><i style="width:${a*100}%"></i></div></div>`}).join("");
+})();
+
+// ---- 히트맵
+const heatCol = v => v>=1?"#3b78c4":v>0?`rgba(224,161,0,${0.35+0.55*v})`:"#c4cad6";
+$("#heat").innerHTML = `<tr><th></th>${D.stages.map(s=>`<th>${esc(s)}</th>`).join("")}<th>Risk</th></tr>` +
+ I.map(i=>`<tr><td class="n">${i.id} ${esc(i.name)}</td>${i.stages.map(v=>`<td class="c" style="background:${heatCol(v)};${v===0?'color:#566':''}">${pct(v)}</td>`).join("")}<td>${pill(i.risk)}</td></tr>`).join("");
+
+// ---- 상세 표 (정렬/필터)
+let sortKey="risk", sortDir=1;
+const cols=[["id","ID"],["name","Qual 항목"],["grade","등급"],["owner","담당자"],["act","진행율"],["plan","계획"],["gap","갭"],["cur","현재 단계"],["delay","지연일"],["risk","Risk"],["updated","갱신일"],["issue","주요 이슈"]];
+const rk={지연:0,주의:1,정상:2,완료:3};
+function drawTbl(){
+  const g=$("#fg").value, r=$("#fr").value, q=$("#fq").value.trim().toLowerCase();
+  let rows=I.filter(i=>(!g||i.grade===g)&&(!r||i.risk===r)&&(!q||(i.name+i.owner+i.id).toLowerCase().includes(q)));
+  rows.sort((a,b)=>{let x=sortKey==="risk"?rk[a.risk]:a[sortKey], y=sortKey==="risk"?rk[b.risk]:b[sortKey];
+    return (x>y?1:x<y?-1:0)*sortDir});
+  $("#tbl").innerHTML=`<thead><tr>${cols.map(c=>`<th data-k="${c[0]}">${c[1]}${c[0]===sortKey?(sortDir>0?" ▲":" ▼"):""}</th>`).join("")}</tr></thead><tbody>`+
+   rows.map(i=>`<tr><td class="c">${i.id}</td><td>${esc(i.name)}</td><td class="c">${i.grade}</td><td class="c">${esc(i.owner)}</td>
+   <td><span class="mini"><i style="width:${i.act*100}%;background:${RC[i.risk]}"></i></span>${pct(i.act)}</td>
+   <td class="c">${pct(i.plan)}</td><td class="c" style="color:${i.gap>D.warn?"var(--bad)":"inherit"}">${i.gap>0?"-":"+"}${pct(Math.abs(i.gap))}p</td>
+   <td>${esc(i.cur)}</td><td class="c">${i.delay?i.delay+"일":"-"}</td><td class="c">${pill(i.risk)}</td><td class="c">${i.updated}</td><td>${esc(i.issue)}</td></tr>`).join("")+"</tbody>";
+  document.querySelectorAll("#tbl th").forEach(th=>th.onclick=()=>{const k=th.dataset.k; if(sortKey===k)sortDir*=-1; else{sortKey=k;sortDir=1} drawTbl()});
+}
+["#fg","#fr"].forEach(s=>$(s).onchange=drawTbl); $("#fq").oninput=drawTbl; drawTbl();
+
+// ---- 이슈 표
+const sevC={상:"var(--bad)",중:"#c99200",하:"var(--sub)"};
+$("#iss").innerHTML=`<thead><tr>${["이슈ID","항목","분류","등록일","이슈 내용","심각도","조치 현황","조치 예정","상태","Hold(일)"].map(h=>`<th style="cursor:default">${h}</th>`).join("")}</tr></thead><tbody>`+
+ [...D.issues].sort((a,b)=>(a.status==="조치완료")-(b.status==="조치완료")||({상:0,중:1,하:2}[a.sev]-{상:0,중:1,하:2}[b.sev])).map(x=>
+ `<tr><td class="c">${x.id}</td><td>${x.item} ${esc(x.name)}</td><td class="c">${esc(x.cat)}</td><td class="c">${x.date}</td><td>${esc(x.text)}</td>
+ <td class="c" style="color:${sevC[x.sev]};font-weight:700">${x.sev}</td><td>${esc(x.action)}</td><td class="c">${x.due}</td><td class="c">${esc(x.status)}</td><td class="c">${x.hold||"-"}</td></tr>`).join("")+"</tbody>";
+
+// ---- 권고 조치 + 확인란
+const open = D.issues.filter(x=>x.status!=="조치완료");
+const recs = risky.map(i=>{
+  const iss = open.find(x=>x.item===i.id);
+  return {key:i.id, head:`[${i.risk}] ${i.id} ${i.name} (${i.owner})`,
+          body: iss ? `이슈: ${iss.text} → 조치: ${iss.action} (예정 ${iss.due})` : "등록된 이슈 없음 — 지연 사유 확인 필요"};
+});
+const sevOrder=i=>{const s=open.find(x=>x.item===i.key); return s?({상:0,중:1,하:2}[s.sev]):3};
+recs.sort((a,b)=>sevOrder(a)-sevOrder(b));
+let saved={}; try{saved=JSON.parse(localStorage.getItem("d1c_qual_checks")||"{}")}catch(e){}
+$("#acts").innerHTML = recs.length? recs.map(r=>`<li><label><input type="checkbox" data-k="${r.key}" ${saved[r.key]?"checked":""}> <b>${esc(r.head)}</b></label><span class="d">${esc(r.body)}</span></li>`).join("")
+  : "<li>지연·주의 항목이 없습니다.</li>";
+document.querySelectorAll("#acts input").forEach(cb=>cb.onchange=()=>{saved[cb.dataset.k]=cb.checked; try{localStorage.setItem("d1c_qual_checks",JSON.stringify(saved))}catch(e){}});
+
+// ================= 챗봇 =================
+const SK="d1c_qual_chat_cfg";
+let cfg={fmt:"openai",base:"",key:"",model:"",remember:false};
+try{Object.assign(cfg,JSON.parse(localStorage.getItem(SK)||"{}"))}catch(e){}
+$("#sfmt").value=cfg.fmt; $("#sbase").value=cfg.base; $("#skey").value=cfg.key; $("#smodel").value=cfg.model; $("#sremember").checked=cfg.remember;
+$("#sbase").placeholder = cfg.fmt==="anthropic"?"https://api.anthropic.com":"https://api.openai.com/v1";
+$("#sfmt").onchange=()=>{$("#sbase").placeholder=$("#sfmt").value==="anthropic"?"https://api.anthropic.com":"https://api.openai.com/v1"};
+
+function readCfg(){
+  cfg={fmt:$("#sfmt").value,base:$("#sbase").value.trim().replace(/\/+$/,""),key:$("#skey").value.trim(),model:$("#smodel").value.trim(),remember:$("#sremember").checked};
+}
+function persist(){
+  const o={...cfg}; if(!cfg.remember) o.key="";
+  try{localStorage.setItem(SK,JSON.stringify(o))}catch(e){}
+}
+const ready=()=>cfg.base&&cfg.key&&cfg.model;
+function cfgState(){ $("#cstat").innerHTML = ready()? '<span style="color:var(--ok)">설정 완료</span>' : '<span style="color:var(--bad)">Base URL, API Key, Model name을 모두 입력하세요.</span>'; }
+readCfg(); cfgState();
+if(ready()) $("#cset").classList.remove("on");
+
+$("#chatFab").onclick=()=>{$("#chat").classList.toggle("on"); if($("#chat").classList.contains("on")) $("#cin").focus()};
+$("#cclose").onclick=()=>$("#chat").classList.remove("on");
+$("#cgear").onclick=()=>$("#cset").classList.toggle("on");
+$("#ssave").onclick=()=>{readCfg();persist();cfgState(); if(ready()) $("#cset").classList.remove("on")};
+
+// 시스템 프롬프트: 역할 / 맥락 / 지시 / 제약
+function context(){
+  const rows=I.map(i=>({id:i.id,항목:i.name,등급:i.grade,담당자:i.owner,시작일:i.start,목표일:i.due,
+    단계별진행율:Object.fromEntries(D.stages.map((s,j)=>[s,Math.round(i.stages[j]*100)+"%"])),
+    전체진행율:pct(i.act),계획진행율:pct(i.plan),계획대비갭:(i.gap*100).toFixed(0)+"%p",현재단계:i.cur,지연일추정:i.delay,Risk:i.risk,최근갱신일:i.updated,이슈:i.issue}));
+  return JSON.stringify({기준일:D.ref,목표납기:D.due,납기까지:D.dday+"일",
+    KPI:{A등급달성:`${dA}/${nA}`,B등급달성:`${dB}/${nB}`,전체달성:`${done.length}/${I.length}`,평균진행율:pct(avgAct),평균계획:pct(avgPlan)},
+    Risk기준:`계획 대비 갭 > ${pct(D.warn)}p 주의, > ${pct(D.delay)}p 지연`,항목:rows,이슈로그:D.issues});
+}
+const SYS=`당신은 BEOL D1c FAB Qual 현황을 분석하는 공정 보조 분석가입니다.
+[지시] 사용자의 질문에 대해 아래 데이터에 근거해 전체 진척 요약, 지연·위험 항목, 주요 이슈와 조치 현황을 간결한 한국어로 답하세요. 답변에는 근거가 된 항목ID(예: Q-15)를 함께 적으세요.
+[제약] 제공된 데이터만 사용하고 수치를 임의로 수정하지 마세요. 데이터로 알 수 없으면 "확인 필요"라고 답하세요. 합격/불합격 판정은 하지 마세요. 우선 조치 항목의 최종 결정은 담당자/PM의 몫임을 전제로 하세요.
+[데이터(JSON)]
+`+context();
+
+let hist=[];
+function add(cls,text){const d=document.createElement("div");d.className="m "+cls;d.textContent=text;$("#cmsgs").appendChild(d);$("#cmsgs").scrollTop=1e9;return d}
+add("a","안녕하세요! D1c Qual 진행현황에 대해 질문해 주세요. 처음이면 ‘설정’에서 Base URL / API Key / Model name을 입력하세요.");
+["지연·주의 항목 요약해줘","납기 내 완료 가능성은?","Hold 중인 이슈는?","담당자별 미완료 항목"].forEach(t=>{
+  const b=document.createElement("button");b.type="button";b.textContent=t;b.onclick=()=>{$("#cin").value=t;send()};$("#chips").appendChild(b)});
+$("#cclear").onclick=()=>{hist=[];$("#cmsgs").innerHTML="";add("a","대화를 초기화했습니다.")};
+
+async function callLLM(){
+  const h={"Content-Type":"application/json"}; let url,body;
+  if(cfg.fmt==="anthropic"){
+    url=cfg.base+(/\/v1$/.test(cfg.base)?"":"/v1")+"/messages";
+    h["x-api-key"]=cfg.key; h["anthropic-version"]="2023-06-01"; h["anthropic-dangerous-direct-browser-access"]="true";
+    body={model:cfg.model,max_tokens:1500,system:SYS,messages:hist};
+  }else{
+    url=cfg.base+"/chat/completions"; h["Authorization"]="Bearer "+cfg.key;
+    body={model:cfg.model,messages:[{role:"system",content:SYS},...hist]};
+  }
+  const r=await fetch(url,{method:"POST",headers:h,body:JSON.stringify(body)});
+  const t=await r.text(); let j; try{j=JSON.parse(t)}catch(e){}
+  if(!r.ok) throw new Error(`HTTP ${r.status}: ${(j&&(j.error?.message||j.message))||t.slice(0,300)}`);
+  const out = cfg.fmt==="anthropic" ? (j.content||[]).map(c=>c.text||"").join("") : j.choices?.[0]?.message?.content;
+  if(!out) throw new Error("응답 형식을 해석하지 못했습니다: "+t.slice(0,300));
+  return out;
+}
+let busy=false;
+async function send(){
+  const q=$("#cin").value.trim(); if(!q||busy) return;
+  readCfg(); persist(); cfgState();
+  if(!ready()){$("#cset").classList.add("on");add("e","Base URL, API Key, Model name을 먼저 입력하세요.");return}
+  $("#cin").value=""; add("u",q); hist.push({role:"user",content:q});
+  busy=true; $("#csend").disabled=true; const w=add("a","답변 생성 중…");
+  try{ const a=await callLLM(); w.textContent=a; hist.push({role:"assistant",content:a}); }
+  catch(e){ hist.pop(); w.className="m e";
+    w.textContent="오류: "+e.message+(/Failed to fetch|NetworkError/i.test(e.message)?"\n(Base URL 확인 또는 해당 서버의 CORS 허용 여부를 확인하세요. 브라우저에서 직접 호출하는 방식이라 CORS가 막힐 수 있습니다.)":""); }
+  busy=false; $("#csend").disabled=false; $("#cmsgs").scrollTop=1e9;
+}
+$("#csend").onclick=send;
+$("#cin").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();send()}});
+</script>
+</body>
+</html>
